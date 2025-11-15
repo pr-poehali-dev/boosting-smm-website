@@ -12,7 +12,7 @@ const Index = () => {
   const [link, setLink] = useState('');
   const [count, setCount] = useState('');
 
-  const handleSubmit = (service: string) => {
+  const handleSubmit = async (service: string, serviceType: string) => {
     if (!link || !count) {
       toast({
         title: "Заполните все поля",
@@ -22,13 +22,43 @@ const Index = () => {
       return;
     }
     
-    toast({
-      title: "Заказ принят! 🎉",
-      description: `${service}: ${count} шт. будет добавлено в течение 24 часов`,
-    });
-    
-    setLink('');
-    setCount('');
+    try {
+      const response = await fetch('https://functions.poehali.dev/638876fb-6a84-4849-bfa6-51259beb841a', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_type: serviceType,
+          link: link,
+          quantity: parseInt(count)
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Заказ принят! 🎉",
+          description: `${service}: ${count} шт. будет добавлено в течение 24 часов`,
+        });
+        
+        setLink('');
+        setCount('');
+      } else {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось создать заказ",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -123,7 +153,7 @@ const Index = () => {
                     />
                   </div>
                   <Button
-                    onClick={() => handleSubmit('Буст на пост')}
+                    onClick={() => handleSubmit('Буст на пост', 'boost')}
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 hover:scale-105"
                   >
                     <Icon name="Sparkles" size={24} className="mr-2" />
@@ -166,7 +196,7 @@ const Index = () => {
                     />
                   </div>
                   <Button
-                    onClick={() => handleSubmit('Звёзды в канал')}
+                    onClick={() => handleSubmit('Звёзды в канал', 'stars')}
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-secondary to-accent hover:opacity-90 transition-all duration-300 hover:scale-105"
                   >
                     <Icon name="Star" size={24} className="mr-2" />
